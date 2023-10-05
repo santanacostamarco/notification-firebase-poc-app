@@ -1,23 +1,8 @@
 import Notifications from '@/components/Notifications'
+import { GetServerSideProps, GetStaticProps, InferGetServerSidePropsType, InferGetStaticPropsType } from 'next'
 
-type HomeProps = {
-  env: Env
-}
 
-export default function Home({
-  env
-}: HomeProps) {
-
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-
-      <Notifications env={env} />
-      
-    </main>
-  )
-}
-
-export async function getServerSideProps() {
+export default function Home() {
 
   const {
     API_KEY,
@@ -26,18 +11,23 @@ export async function getServerSideProps() {
     MESSAGING_SENDER_ID,
     PROJECT_ID,
     STORAGE_BUCKET,
+    VAPID_KEY,
   } = process.env
 
-  return {
-    props: {
-      env: {
-        API_KEY,
-        APP_ID,
-        AUTH_DOMAIN,
-        MESSAGING_SENDER_ID,
-        PROJECT_ID,
-        STORAGE_BUCKET,
-      }
-    }
+  const env = {
+    API_KEY,
+    APP_ID,
+    AUTH_DOMAIN,
+    MESSAGING_SENDER_ID,
+    PROJECT_ID,
+    STORAGE_BUCKET,
+    VAPID_KEY,
   }
+
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+      <Notifications env={env} /> 
+    </main>
+  )
 }
+

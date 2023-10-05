@@ -4,10 +4,11 @@ declare module "*.ico" {
 }
 
 type Env = {
-  API_KEY: string;
-  APP_ID: string;
-  AUTH_DOMAIN: string;
-  MESSAGING_SENDER_ID: string;
-  PROJECT_ID: string;
-  STORAGE_BUCKET: string;
+  API_KEY?: string;
+  APP_ID?: string;
+  AUTH_DOMAIN?: string;
+  MESSAGING_SENDER_ID?: string;
+  PROJECT_ID?: string;
+  STORAGE_BUCKET?: string;
+  VAPID_KEY?: string;
 }

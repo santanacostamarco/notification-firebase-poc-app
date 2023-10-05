@@ -1,7 +1,7 @@
 "use client";
 
 import { FC, useCallback, useEffect, useState } from 'react';
-import io from 'socket.io-client'
+// import io from 'socket.io-client'
 import { initializeApp } from "firebase/app";
 import { Messaging, getMessaging, getToken } from "firebase/messaging";
 import icon from '@/app/favicon.ico'
@@ -26,17 +26,15 @@ const Notifications: FC<{env: Env}> = ({env}) => {
       appId: env.APP_ID
     });
 
-    setMessaging(getMessaging(app))
+    const messaging = getMessaging(app)
 
+    setMessaging(messaging)
+    getToken(messaging, {vapidKey: env.VAPID_KEY})
+    .then((token) => {
+      console.log("🚀 ~ file: Notifications.tsx:34 ~ getToken ~ token:", token)
+    })
   
-  }, [
-    env.API_KEY,
-    env.APP_ID,
-    env.AUTH_DOMAIN,
-    env.MESSAGING_SENDER_ID,
-    env.PROJECT_ID,
-    env.STORAGE_BUCKET
-  ])
+  }, [env.API_KEY, env.APP_ID, env.AUTH_DOMAIN, env.MESSAGING_SENDER_ID, env.PROJECT_ID, env.STORAGE_BUCKET, env.VAPID_KEY])
 
   const [notificationPermitionGranted, setNotifictionPermitionGranted] = useState(false)
   const [notificationHistory, setNotificationHistory] = useState<NotificationProps[]>([])
