@@ -3,12 +3,13 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 // import io from 'socket.io-client'
 import { initializeApp } from "firebase/app";
-import { Messaging, getMessaging, getToken, onMessage } from "firebase/messaging";
+import { getMessaging, getToken, onMessage } from "firebase/messaging";
+import { onBackgroundMessage } from "firebase/messaging/sw";
+
 import icon from '@/app/favicon.ico'
 
 type NotificationProps = {
   id: string;
-  date: Date;
   message: string;
   read: boolean
 }
@@ -17,6 +18,21 @@ const Notifications: FC<{env: Env}> = ({env}) => {
   // const [messaging, setMessaging] = useState<Messaging|null>(null)
   const pushNotification = useCallback((notification: NotificationProps) => {
     setNotificationHistory(notificationHistory => [...notificationHistory, notification])
+  }, [])
+
+  const [notificationPermitionGranted, setNotifictionPermitionGranted] = useState(false)
+  const [notificationHistory, setNotificationHistory] = useState<NotificationProps[]>([])
+
+  const setRead = useCallback((notification: NotificationProps) => {
+    setNotificationHistory(notificationHistory => notificationHistory.map(_notification => {
+      if (notification.id === _notification.id) {
+        return {
+          ..._notification, 
+          read: true
+        }
+      } 
+      return _notification
+    }))
   }, [])
 
   useEffect(() => {
@@ -37,31 +53,26 @@ const Notifications: FC<{env: Env}> = ({env}) => {
     .then((token) => {
       console.log("🚀 ~ file: Notifications.tsx:34 ~ getToken ~ token:", token)
     })
+
     onMessage(messaging, (payload) => {
-      console.log('Message received. ', payload);
-      // ...
-
-      // pushNotification({
-      //   date: payload.data
-      // })
+      pushNotification({
+        id: payload.messageId,
+        message: payload.notification?.body || '',
+        read: false
+      })
     });
+
+    onBackgroundMessage(messaging, (payload) => {
+      pushNotification({
+        id: payload.messageId,
+        message: payload.notification?.body || '',
+        read: false
+      })
+    })
+
   
-  }, [env.API_KEY, env.APP_ID, env.AUTH_DOMAIN, env.MESSAGING_SENDER_ID, env.PROJECT_ID, env.STORAGE_BUCKET, env.VAPID_KEY])
+  }, [env.API_KEY, env.APP_ID, env.AUTH_DOMAIN, env.MESSAGING_SENDER_ID, env.PROJECT_ID, env.STORAGE_BUCKET, env.VAPID_KEY, pushNotification])
 
-  const [notificationPermitionGranted, setNotifictionPermitionGranted] = useState(false)
-  const [notificationHistory, setNotificationHistory] = useState<NotificationProps[]>([])
-
-  const setRead = useCallback((notification: NotificationProps) => {
-    setNotificationHistory(notificationHistory => notificationHistory.map(_notification => {
-      if (notification.id === _notification.id) {
-        return {
-          ..._notification, 
-          read: true
-        }
-      } 
-      return _notification
-    }))
-  }, [])
     
   
 
