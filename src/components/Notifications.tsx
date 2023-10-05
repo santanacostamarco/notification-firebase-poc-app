@@ -3,7 +3,7 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 // import io from 'socket.io-client'
 import { initializeApp } from "firebase/app";
-import { Messaging, getMessaging, getToken } from "firebase/messaging";
+import { Messaging, getMessaging, getToken, onMessage } from "firebase/messaging";
 import icon from '@/app/favicon.ico'
 
 type NotificationProps = {
@@ -14,7 +14,10 @@ type NotificationProps = {
 }
 
 const Notifications: FC<{env: Env}> = ({env}) => {
-  const [messaging, setMessaging] = useState<Messaging|null>(null)
+  // const [messaging, setMessaging] = useState<Messaging|null>(null)
+  const pushNotification = useCallback((notification: NotificationProps) => {
+    setNotificationHistory(notificationHistory => [...notificationHistory, notification])
+  }, [])
 
   useEffect(() => {
     const app = initializeApp({
@@ -28,20 +31,25 @@ const Notifications: FC<{env: Env}> = ({env}) => {
 
     const messaging = getMessaging(app)
 
-    setMessaging(messaging)
+    // setMessaging(messaging)
+
     getToken(messaging, {vapidKey: env.VAPID_KEY})
     .then((token) => {
       console.log("🚀 ~ file: Notifications.tsx:34 ~ getToken ~ token:", token)
     })
+    onMessage(messaging, (payload) => {
+      console.log('Message received. ', payload);
+      // ...
+
+      // pushNotification({
+      //   date: payload.data
+      // })
+    });
   
   }, [env.API_KEY, env.APP_ID, env.AUTH_DOMAIN, env.MESSAGING_SENDER_ID, env.PROJECT_ID, env.STORAGE_BUCKET, env.VAPID_KEY])
 
   const [notificationPermitionGranted, setNotifictionPermitionGranted] = useState(false)
   const [notificationHistory, setNotificationHistory] = useState<NotificationProps[]>([])
-
-  const pushNotification = useCallback((notification: NotificationProps) => {
-    setNotificationHistory(notificationHistory => [...notificationHistory, notification])
-  }, [])
 
   const setRead = useCallback((notification: NotificationProps) => {
     setNotificationHistory(notificationHistory => notificationHistory.map(_notification => {
