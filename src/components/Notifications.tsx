@@ -61,15 +61,6 @@ const Notifications: FC<{env: Env}> = ({env}) => {
         read: false
       })
     });
-
-    onBackgroundMessage(messaging, (payload) => {
-      pushNotification({
-        id: payload.messageId,
-        message: payload.notification?.body || '',
-        read: false
-      })
-    })
-
   
   }, [env.API_KEY, env.APP_ID, env.AUTH_DOMAIN, env.MESSAGING_SENDER_ID, env.PROJECT_ID, env.STORAGE_BUCKET, env.VAPID_KEY, pushNotification])
 
