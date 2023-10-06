@@ -1,12 +1,6 @@
-"use client";
-
-import { FC, useCallback, useEffect, useState } from 'react';
-// import io from 'socket.io-client'
+import { useCallback, useEffect, useState } from 'react';
 import { initializeApp } from "firebase/app";
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
-import { onBackgroundMessage } from "firebase/messaging/sw";
-
-import icon from '@/app/favicon.ico'
 
 type NotificationProps = {
   id: string;
@@ -14,14 +8,13 @@ type NotificationProps = {
   read: boolean
 }
 
-const Notifications: FC<{env: Env}> = ({env}) => {
-  // const [messaging, setMessaging] = useState<Messaging|null>(null)
+export const useNotification = (env: Env) => {
+  const [notificationPermitionGranted, setNotifictionPermitionGranted] = useState(false)
+  const [notificationHistory, setNotificationHistory] = useState<NotificationProps[]>([])
+
   const pushNotification = useCallback((notification: NotificationProps) => {
     setNotificationHistory(notificationHistory => [...notificationHistory, notification])
   }, [])
-
-  const [notificationPermitionGranted, setNotifictionPermitionGranted] = useState(false)
-  const [notificationHistory, setNotificationHistory] = useState<NotificationProps[]>([])
 
   const setRead = useCallback((notification: NotificationProps) => {
     setNotificationHistory(notificationHistory => notificationHistory.map(_notification => {
@@ -35,6 +28,28 @@ const Notifications: FC<{env: Env}> = ({env}) => {
     }))
   }, [])
 
+  const requestPermition = useCallback(() => {
+    if (!notificationPermitionGranted && window.Notification) {
+      Notification.requestPermission().then(permition => {
+        if (permition === 'granted') {
+          setNotifictionPermitionGranted(true)
+        }
+      })
+    }
+  }, [notificationPermitionGranted])
+
+  useEffect(() => {
+    if (!notificationPermitionGranted && window.Notification) {
+      Notification.requestPermission().then(permition => {
+        if (permition === 'granted') {
+          setNotifictionPermitionGranted(true)
+        }
+      })
+    }
+  }, [notificationPermitionGranted])
+
+
+
   useEffect(() => {
     const app = initializeApp({
       apiKey: env.API_KEY,
@@ -46,8 +61,6 @@ const Notifications: FC<{env: Env}> = ({env}) => {
     });
 
     const messaging = getMessaging(app)
-
-    // setMessaging(messaging)
 
     getToken(messaging, {vapidKey: env.VAPID_KEY})
     .then((token) => {
@@ -64,43 +77,10 @@ const Notifications: FC<{env: Env}> = ({env}) => {
   
   }, [env.API_KEY, env.APP_ID, env.AUTH_DOMAIN, env.MESSAGING_SENDER_ID, env.PROJECT_ID, env.STORAGE_BUCKET, env.VAPID_KEY, pushNotification])
 
-    
-  
-
-  return (
-    <div> 
-      <h1> Notificações </h1>
-      {notificationPermitionGranted && <p>
-        Permissão concedida para exibir notificações.
-      </p>}
-      {!notificationPermitionGranted && <div>
-        <p>
-        Permissão negada para exibir notificações.
-        </p>
-        <button>
-          Permitir notificações
-        </button>
-      </div>}
-      <ul>
-        {notificationHistory.map(notification => (
-          <li key={notification.id}>
-            {notification.message}
-            {notification.read ? " - lida" : ""}
-            {!notification.read ? (
-              <> {' '}
-              <button onClick={() => {
-                setRead(notification)
-              }}>
-                Marcar como Lida
-              </button>
-              </>
-            ) : null}
-          </li>
-        ))}
-      </ul>
-    </div>
-  
-  )
+  return {
+    notificationPermitionGranted,
+    notificationHistory,
+    requestPermition,
+    setRead,
+  }
 }
-
-export default Notifications
